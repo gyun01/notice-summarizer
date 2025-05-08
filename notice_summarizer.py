@@ -2,20 +2,28 @@ import streamlit as st
 import openai
 import re
 from PIL import Image
+import os
 
-# GPT 요약 함수
+# API 키 설정
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# GPT 요약 함수 (신규 버전 대응)
 def summarize_notice(text):
-    response = openai.ChatCompletion.create(
+    client = openai.OpenAI()
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {
                 "role": "system",
                 "content": "공지 내용을 요약해줘. 날짜, 장소, 제출, 링크, 주의사항이 있으면 항목별로 구분해줘. 각 항목이 없으면 '❌ 명시되지 않음'이라고 적어줘."
             },
-            {"role": "user", "content": text}
+            {
+                "role": "user",
+                "content": text
+            }
         ]
     )
-    summary = response["choices"][0]["message"]["content"]
+    summary = response.choices[0].message.content
     return {
         "요약": summary,
         "날짜": extract_field(summary, "날짜"),
@@ -59,13 +67,11 @@ if st.button("🤖 요약하기"):
             st.markdown(f"**🗓 날짜:** {result['날짜']}")
             st.markdown(f"**📍 장소:** {result['장소']}")
             st.markdown(f"**📝 제출:** {result['제출']}")
-            
             if result["링크"] and result["링크"][0] != "❌ 명시되지 않음":
                 for url in result["링크"]:
                     st.markdown(f"[📎 링크 바로가기]({url})")
             else:
                 st.markdown("📎 링크: ❌ 명시되지 않음")
-            
             st.markdown(f"**⚠ 주의:** {result['주의']}")
         except Exception as e:
             st.error(f"❌ 오류 발생: {e}")
