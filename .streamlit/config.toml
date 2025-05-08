@@ -1,4 +1,7 @@
 [server]
 headless = true
-enableCORS = false
 port = 8501
+enableCORS = false
+
+[general]
+main = "notice_summarizer.py"
